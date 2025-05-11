@@ -450,10 +450,10 @@ const App = () => {
     <Container maxWidth={false} sx={{ py: 4, px: 4 }}>
       <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
-          Vérificateur et Décodeur IBAN
+          Convertir un IBAN en RIB
         </Typography>
         <Typography variant="body1" paragraph align="center" color="textSecondary">
-          Collez votre IBAN pour le vérifier et le décoder automatiquement
+          Collez votre IBAN pour le vérifier et le convertir automatiquement
         </Typography>
       </Paper>
 
