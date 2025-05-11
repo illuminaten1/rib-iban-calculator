@@ -254,7 +254,9 @@ const App = () => {
     try {
       const text = await navigator.clipboard.readText();
       setIban(formatIban(text));
-    } catch (err) {
+    } catch (error) {
+      // Utilisation explicite de la variable error pour le log
+      console.error('Erreur de lecture du presse-papiers:', error);
       setMessage('Impossible de lire le presse-papiers');
       setMessageType('error');
     }
@@ -287,10 +289,15 @@ const App = () => {
     setMessage('');
   };
 
-  // Fonction pour calculer la clé RIB
+  // Fonction modifiée pour calculer la clé RIB
   const calculerCleRib = () => {
     const codeB = litnombre(codeBanque);
     const codeG = litnombre(codeGuichet);
+    
+    // On garde la version originale du numéro de compte (avec les lettres)
+    const noCompteOriginal = noCompte;
+    
+    // On convertit seulement pour le calcul de la clé
     const noC = litnombreCompte(noCompte);
 
     if (codeB.length !== 5 || codeG.length !== 5 || noC.length > 11) {
@@ -299,6 +306,7 @@ const App = () => {
       return;
     }
 
+    // Calcul de la clé RIB (inchangé)
     const a = parseFloat(codeB);
     const b = parseFloat(codeG);
     const c = parseFloat(noC);
@@ -322,11 +330,15 @@ const App = () => {
     const result = i < 10 ? '0' + i : String(i);
     setCleRib(result);
     
-    // Générer l'IBAN
-    const noCompteComplete = noC.padEnd(11, '0');
-    const ribComplet = `${codeB}${codeG}${noCompteComplete}${result}`;
+    // Générer l'IBAN (MODIFIÉ pour conserver les lettres)
+    // On complète le numéro de compte original avec des zéros si nécessaire
+    const noCompteComplete = noCompteOriginal.padEnd(11, '0');
+    
+    // On utilise le numéro de compte original avec les lettres
+    const ribComplet = `${codeBanque}${codeGuichet}${noCompteComplete}${result}`;
     const codePays = 'FR';
     
+    // Pour le reste du calcul de l'IBAN, on convertit en nombres (inchangé)
     const concat = litnombreIBAN(ribComplet + codePays + '00');
     
     let retenue = '';
@@ -350,6 +362,7 @@ const App = () => {
     setMessage('Clé RIB et IBAN calculés avec succès');
     setMessageType('success');
   };
+
 
   return (
     <Container maxWidth={false} sx={{ py: 4, px: 4 }}>
