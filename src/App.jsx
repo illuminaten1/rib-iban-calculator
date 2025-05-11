@@ -14,7 +14,9 @@ import {
   InputAdornment,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import {
   ContentCopy,
@@ -24,7 +26,8 @@ import {
   Clear,
   ContentPaste,
   ExpandMore,
-  Calculate
+  Calculate,
+  ArrowDropDown
 } from '@mui/icons-material';
 
 const App = () => {
@@ -43,6 +46,9 @@ const App = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('info');
   const [showSpaces, setShowSpaces] = useState(true);
+  
+  // État pour le menu de copie
+  const [copyMenuAnchor, setCopyMenuAnchor] = useState(null);
   
   // Analyser automatiquement l'IBAN quand il change
   useEffect(() => {
@@ -255,7 +261,7 @@ const App = () => {
       const text = await navigator.clipboard.readText();
       setIban(formatIban(text));
     } catch (error) {
-      // Utilisation de la variable error ou on peut simplement l'omettre
+      // Utilisation de la variable error
       console.error('Erreur de lecture du presse-papiers:', error);
       setMessage('Impossible de lire le presse-papiers');
       setMessageType('error');
@@ -274,22 +280,48 @@ const App = () => {
 
   // Fonction pour copier dans le presse-papiers
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setMessage('Texte copié dans le presse-papiers');
+        setMessageType('success');
+        
+        // Effacer le message après 2 secondes
+        setTimeout(() => {
+          if (message === 'Texte copié dans le presse-papiers') {
+            setMessage('');
+          }
+        }, 2000);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la copie:', error);
+        setMessage('Impossible de copier dans le presse-papiers');
+        setMessageType('error');
+      });
   };
 
-  // Fonction pour copier le RIB pour tableur
-  const copyRibToSpreadsheet = () => {
-    // Format: Code banque [TAB] Code guichet [TAB] Numéro de compte [TAB] Clé RIB
+  // Fonction pour ouvrir le menu de copie
+  const handleCopyMenuClick = (event) => {
+    setCopyMenuAnchor(event.currentTarget);
+  };
+
+  // Fonction pour fermer le menu de copie
+  const handleCopyMenuClose = () => {
+    setCopyMenuAnchor(null);
+  };
+
+  // Fonction pour copier le RIB format standard (avec tabulations)
+  const copyRibStandard = () => {
     const formattedText = `${codeBanque}\t${codeGuichet}\t${noCompte}\t${cleRib}`;
     
     navigator.clipboard.writeText(formattedText)
       .then(() => {
-        setMessage('Données RIB copiées pour tableur');
+        setMessage('Données RIB copiées (format standard)');
         setMessageType('success');
+        handleCopyMenuClose();
         
         // Effacer le message après 3 secondes
         setTimeout(() => {
-          if (message === 'Données RIB copiées pour tableur') {
+          if (message === 'Données RIB copiées (format standard)') {
             setMessage('');
           }
         }, 3000);
@@ -298,6 +330,33 @@ const App = () => {
         console.error('Erreur lors de la copie:', error);
         setMessage('Impossible de copier dans le presse-papiers');
         setMessageType('error');
+        handleCopyMenuClose();
+      });
+  };
+
+  // Fonction pour copier le RIB format LibreOffice (avec apostrophes)
+  const copyRibLibreOffice = () => {
+    // Utilisation d'apostrophes au début pour forcer le format texte dans LibreOffice
+    const formattedText = `'${codeBanque}\t'${codeGuichet}\t'${noCompte}\t'${cleRib}`;
+    
+    navigator.clipboard.writeText(formattedText)
+      .then(() => {
+        setMessage('Données RIB copiées (format LibreOffice)');
+        setMessageType('success');
+        handleCopyMenuClose();
+        
+        // Effacer le message après 3 secondes
+        setTimeout(() => {
+          if (message === 'Données RIB copiées (format LibreOffice)') {
+            setMessage('');
+          }
+        }, 3000);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la copie:', error);
+        setMessage('Impossible de copier dans le presse-papiers');
+        setMessageType('error');
+        handleCopyMenuClose();
       });
   };
 
@@ -391,10 +450,10 @@ const App = () => {
     <Container maxWidth={false} sx={{ py: 4, px: 4 }}>
       <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
-          Convertir un IBAN en RIB
+          Vérificateur et Décodeur IBAN
         </Typography>
         <Typography variant="body1" paragraph align="center" color="textSecondary">
-          Collez votre IBAN pour le vérifier et le convertir automatiquement
+          Collez votre IBAN pour le vérifier et le décoder automatiquement
         </Typography>
       </Paper>
 
@@ -482,14 +541,27 @@ const App = () => {
               <Typography variant="h6" color="primary">
                 RIB décodé
               </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<ContentCopy />}
-                onClick={copyRibToSpreadsheet}
-                size="small"
-              >
-                Copier pour tableur
-              </Button>
+              
+              {/* Menu pour les options de copie */}
+              <Box>
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopy />}
+                  endIcon={<ArrowDropDown />}
+                  onClick={handleCopyMenuClick}
+                  size="small"
+                >
+                  Copier pour tableur
+                </Button>
+                <Menu
+                  anchorEl={copyMenuAnchor}
+                  open={Boolean(copyMenuAnchor)}
+                  onClose={handleCopyMenuClose}
+                >
+                  <MenuItem onClick={copyRibStandard}>Format Standard</MenuItem>
+                  <MenuItem onClick={copyRibLibreOffice}>Format LibreOffice</MenuItem>
+                </Menu>
+              </Box>
             </Box>
             
             <Grid container spacing={2}>
