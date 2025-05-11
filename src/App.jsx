@@ -255,7 +255,7 @@ const App = () => {
       const text = await navigator.clipboard.readText();
       setIban(formatIban(text));
     } catch (error) {
-      // Utilisation explicite de la variable error pour le log
+      // Utilisation de la variable error ou on peut simplement l'omettre
       console.error('Erreur de lecture du presse-papiers:', error);
       setMessage('Impossible de lire le presse-papiers');
       setMessageType('error');
@@ -277,6 +277,30 @@ const App = () => {
     navigator.clipboard.writeText(text);
   };
 
+  // Fonction pour copier le RIB pour tableur
+  const copyRibToSpreadsheet = () => {
+    // Format: Code banque [TAB] Code guichet [TAB] Numéro de compte [TAB] Clé RIB
+    const formattedText = `${codeBanque}\t${codeGuichet}\t${noCompte}\t${cleRib}`;
+    
+    navigator.clipboard.writeText(formattedText)
+      .then(() => {
+        setMessage('Données RIB copiées pour tableur');
+        setMessageType('success');
+        
+        // Effacer le message après 3 secondes
+        setTimeout(() => {
+          if (message === 'Données RIB copiées pour tableur') {
+            setMessage('');
+          }
+        }, 3000);
+      })
+      .catch(error => {
+        console.error('Erreur lors de la copie:', error);
+        setMessage('Impossible de copier dans le presse-papiers');
+        setMessageType('error');
+      });
+  };
+
   // Fonction pour réinitialiser
   const reinitialiser = () => {
     setIban('');
@@ -289,7 +313,7 @@ const App = () => {
     setMessage('');
   };
 
-  // Fonction modifiée pour calculer la clé RIB
+  // Fonction pour calculer la clé RIB
   const calculerCleRib = () => {
     const codeB = litnombre(codeBanque);
     const codeG = litnombre(codeGuichet);
@@ -363,15 +387,14 @@ const App = () => {
     setMessageType('success');
   };
 
-
   return (
     <Container maxWidth={false} sx={{ py: 4, px: 4 }}>
       <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
-          Vérificateur et Décodeur IBAN
+          Convertir un IBAN en RIB
         </Typography>
         <Typography variant="body1" paragraph align="center" color="textSecondary">
-          Collez votre IBAN pour le vérifier et le décoder automatiquement
+          Collez votre IBAN pour le vérifier et le convertir automatiquement
         </Typography>
       </Paper>
 
@@ -455,9 +478,19 @@ const App = () => {
       {ibanValide && codeBanque && (
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom color="primary">
-              RIB décodé
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" color="primary">
+                RIB décodé
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<ContentCopy />}
+                onClick={copyRibToSpreadsheet}
+                size="small"
+              >
+                Copier pour tableur
+              </Button>
+            </Box>
             
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -465,7 +498,16 @@ const App = () => {
                   fullWidth
                   label="Code banque"
                   value={codeBanque}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{ 
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => copyToClipboard(codeBanque)} size="small" title="Copier">
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -473,7 +515,16 @@ const App = () => {
                   fullWidth
                   label="Code guichet"
                   value={codeGuichet}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{ 
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => copyToClipboard(codeGuichet)} size="small" title="Copier">
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={8}>
@@ -481,7 +532,16 @@ const App = () => {
                   fullWidth
                   label="Numéro de compte"
                   value={noCompte}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{ 
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => copyToClipboard(noCompte)} size="small" title="Copier">
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -489,7 +549,16 @@ const App = () => {
                   fullWidth
                   label="Clé RIB"
                   value={cleRib}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{ 
+                    readOnly: true,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => copyToClipboard(cleRib)} size="small" title="Copier">
+                          <ContentCopy fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
             </Grid>
